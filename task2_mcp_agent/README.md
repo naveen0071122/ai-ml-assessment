@@ -120,33 +120,36 @@ Shows the live tool-call trace and the final answer. The database is
 built automatically on first load if it doesn't exist yet.
 
 ## Connector flow
-agent.py (subprocess A) mcp_server.py (subprocess B)
-───────────────────────── ──────────────────────────────
 
-spawns mcp_server.py over
-stdio, session.initialize() ───▶
-list_tools() ───▶ returns tool schemas
-(list_tables / describe_schema /
-run_query) — no data yet
-LLM (or offline planner)
-decides: call list_tables() ───▶ SELECT name FROM sqlite_master...
-◀─── ["employees","projects","issues"]
-LLM decides: call
-describe_schema("issues") ───▶ PRAGMA table_info / foreign_key_list
-◀─── {columns, foreign_keys}
-LLM writes SQL, calls
-run_query(sql) ───▶ _enforce_read_only(sql)
--> open DB in mode=ro
--> execute, LIMIT-capped
-◀─── {row_count, rows} OR {error}
-If {error}: LLM reads the
-message, regenerates SQL,
-goes back to step 5.
-LLM has enough data ->
-answers in plain English.
+```
+ agent.py (subprocess A)                mcp_server.py (subprocess B)
+ ─────────────────────────              ──────────────────────────────
+ 1. spawns mcp_server.py over
+    stdio, session.initialize()  ───▶
+ 2. list_tools()                 ───▶   returns tool schemas
+                                          (list_tables / describe_schema /
+                                           run_query) — no data yet
+ 3. LLM (or offline planner)
+    decides: call list_tables()  ───▶   SELECT name FROM sqlite_master...
+                                  ◀───   ["employees","projects","issues"]
+ 4. LLM decides: call
+    describe_schema("issues")    ───▶   PRAGMA table_info / foreign_key_list
+                                  ◀───   {columns, foreign_keys}
+ 5. LLM writes SQL, calls
+    run_query(sql)                ───▶  _enforce_read_only(sql)
+                                          -> open DB in mode=ro
+                                          -> execute, LIMIT-capped
+                                  ◀───   {row_count, rows} OR {error}
+ 6. If {error}: LLM reads the
+    message, regenerates SQL,
+    goes back to step 5.
+ 7. LLM has enough data ->
+    answers in plain English.
+```
 
+**Credentials never leave `mcp_server.py`.**
 
-**Credentials never leave `mcp_server.py`.** `DB_PATH` is read from that
+`DB_PATH` is read from that
 process's own environment (`os.environ`); the agent process only ever
 sees JSON tool results over stdio. There is no connection string, no
 file path, and no SQL the agent didn't itself generate anywhere in the
