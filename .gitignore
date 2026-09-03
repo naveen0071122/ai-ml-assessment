@@ -3,15 +3,4 @@ __pycache__/
 .pytest_cache/
 .env
 *.egg-info/
-
-# Generated artifacts (reproducible via the scripts that create them --
-# see each task's README "How to run")
-task1_multimodal_retrieval/data/pdfs/
-task1_multimodal_retrieval/data/images/
-task1_multimodal_retrieval/data/extracted_images/
-task1_multimodal_retrieval/data/manifest.json
-task1_multimodal_retrieval/data/eval_results.json
-task1_multimodal_retrieval/data/eval_results.csv
-task2_mcp_agent/data/company.db
-
 .streamlit/

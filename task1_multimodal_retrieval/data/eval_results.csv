@@ -1,0 +1,16 @@
+query_id,query,query_type,text_rag_mrr,multimodal_mrr,text_rag_top_doc,multimodal_top_doc,winner,text_rag_latency_ms,multimodal_latency_ms
+q01,What was the highest-revenue region in Q3?,visual_favoring,1.0,1.0,doc01,doc01,tie,0.63,0.55
+q02,Which production service connects directly to the redis cache?,visual_favoring,1.0,1.0,doc03,doc03,tie,0.39,0.41
+q03,How long did the payment latency spike last during the incident?,visual_favoring,1.0,1.0,doc06,doc06,tie,0.34,0.4
+q04,Which expense category had the largest budget overage in Q3?,visual_favoring,1.0,1.0,doc07,doc07,tie,0.36,0.36
+q05,Which rack is physically isolated near the cooling unit in the server room?,visual_favoring,0.0,1.0,,doc05,multimodal,0.33,0.38
+q06,Who does Divya Krishnan report to?,visual_favoring,0.0,1.0,doc04,doc08,multimodal,0.34,0.36
+q07,How long does the Build phase take in the 2025 product roadmap?,visual_favoring,1.0,1.0,doc10,doc10,tie,0.33,0.38
+q08,What should new engineers do in their first week?,text_only,1.0,1.0,doc02,doc02,tie,0.36,0.33
+q09,When does health insurance coverage start for a new employee?,text_only,1.0,1.0,doc04,doc04,tie,0.38,0.35
+q10,What multi-factor authentication and encryption requirements exist for laptops?,text_only,1.0,1.0,doc09,doc09,tie,0.33,0.33
+q11,How many days per week can employees work remotely?,text_only,1.0,1.0,doc11,doc11,tie,0.36,0.35
+q12,How long are application logs retained?,text_only,1.0,1.0,doc12,doc12,tie,0.43,0.34
+q13,What caused the payments outage and how was it mitigated?,text_only,1.0,1.0,doc06,doc06,tie,0.34,0.37
+q14,What is the 401k matching policy?,text_only,1.0,1.0,doc04,doc04,tie,0.32,0.37
+q15,What deletion timeline applies to privacy/data-subject requests?,text_only,1.0,1.0,doc12,doc12,tie,0.49,0.42

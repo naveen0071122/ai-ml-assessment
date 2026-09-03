@@ -1,0 +1,134 @@
+[
+  {
+    "doc_id": "doc01",
+    "kind": "pdf",
+    "path": "pdfs/doc01_q3_sales_report.pdf",
+    "extractable_text": "This report summarizes company performance for Q3. Overall revenue grew compared to Q2, driven by strong demand across most regions. The sales team closed several enterprise deals this quarter, and churn remained flat. See the chart below for the regional breakdown. Leadership will discuss regional strategy in the Q4 planning offsite.",
+    "visual_only_facts": [
+      "APAC had the highest Q3 revenue at $6.4M",
+      "East region was second at $5.8M"
+    ],
+    "image_paths": [
+      "images/_chart_revenue.png"
+    ]
+  },
+  {
+    "doc_id": "doc02",
+    "kind": "pdf",
+    "path": "pdfs/doc02_onboarding_guide.pdf",
+    "extractable_text": "Welcome to the Engineering team. On your first day, IT will provision your laptop and accounts. Please complete the security training module within your first week. Your manager will assign a buddy for your first 30 days. All new engineers must read the Incident Response runbook and the Coding Standards guide before shipping their first change. Slack channels to join: #eng-general, #eng-oncall, #eng-random.",
+    "visual_only_facts": [],
+    "image_paths": []
+  },
+  {
+    "doc_id": "doc03",
+    "kind": "pdf",
+    "path": "pdfs/doc03_network_architecture.pdf",
+    "extractable_text": "This document describes the production network path for payment traffic. Traffic enters through the edge load balancer and is routed to backend services. See the architecture diagram for the full topology. Any change to this path requires sign-off from the Platform team.",
+    "visual_only_facts": [
+      "Auth service (auth-prod-3) connects directly to the redis cache (redis-shard-9)",
+      "The API gateway host is gw-cluster-b",
+      "The payments DB host is pg-primary-eu2"
+    ],
+    "image_paths": [
+      "images/_diagram_network.png"
+    ]
+  },
+  {
+    "doc_id": "doc04",
+    "kind": "pdf",
+    "path": "pdfs/doc04_benefits_faq.pdf",
+    "extractable_text": "Q: When does health insurance start? A: Coverage begins on your first day of employment. Q: How much PTO do I get? A: Full-time employees accrue 18 days per year, prorated in your first year. Q: Is there a 401k match? A: Yes, the company matches 4% of your contributions. Contact hr@corp.com with further questions.",
+    "visual_only_facts": [],
+    "image_paths": []
+  },
+  {
+    "doc_id": "doc05",
+    "kind": "image",
+    "path": "images/doc05_floorplan.png",
+    "extractable_text": "",
+    "visual_only_facts": [
+      "Rack C7 is the physically isolated rack near the cooling unit",
+      "The fire exit for Server Room 2 is on the south wall"
+    ],
+    "image_paths": [
+      "images/doc05_floorplan.png"
+    ]
+  },
+  {
+    "doc_id": "doc06",
+    "kind": "pdf",
+    "path": "pdfs/doc06_incident_postmortem.pdf",
+    "extractable_text": "On the afternoon of the incident, the Payments API experienced elevated latency. Customers reported slow checkout. The on-call engineer was paged and mitigated the issue by restarting the affected pods. Root cause was a connection pool exhaustion triggered by a deploy. See the attached latency chart for the incident timeline. A follow-up action item was created to add pool-size alerting.",
+    "visual_only_facts": [
+      "The latency spike lasted roughly 10 minutes, from minute 20 to minute 30",
+      "Peak p99 latency reached approximately 2600ms"
+    ],
+    "image_paths": [
+      "images/_chart_latency.png"
+    ]
+  },
+  {
+    "doc_id": "doc07",
+    "kind": "pdf",
+    "path": "pdfs/doc07_expense_report.pdf",
+    "extractable_text": "Attached is the Q3 expense summary for the Finance department, prepared for the monthly close review.",
+    "visual_only_facts": [
+      "Contractor Fees had the largest overage, +$6,900 over budget",
+      "Actual travel spend was $24,350 against an $18,000 budget"
+    ],
+    "image_paths": [
+      "images/_table_expenses.png"
+    ]
+  },
+  {
+    "doc_id": "doc08",
+    "kind": "image",
+    "path": "images/doc08_org_chart.png",
+    "extractable_text": "",
+    "visual_only_facts": [
+      "Divya Krishnan reports to Karthik Iyer, the ML Lead",
+      "Vikram Shah is the Engineering Manager over Backend, DevOps, and ML leads"
+    ],
+    "image_paths": [
+      "images/doc08_org_chart.png"
+    ]
+  },
+  {
+    "doc_id": "doc09",
+    "kind": "pdf",
+    "path": "pdfs/doc09_security_policy.pdf",
+    "extractable_text": "All employees must use multi-factor authentication for corporate accounts. Laptops must have full-disk encryption enabled. Do not store customer data on personal devices. Report suspected phishing to security@corp.com immediately. Password managers are provided to all staff and are mandatory for shared credentials.",
+    "visual_only_facts": [],
+    "image_paths": []
+  },
+  {
+    "doc_id": "doc10",
+    "kind": "pdf",
+    "path": "pdfs/doc10_product_roadmap.pdf",
+    "extractable_text": "This roadmap covers the major workstreams planned for 2025, from early discovery through general availability. Cross-functional teams will sync weekly. See the Gantt chart for the full sequencing and durations of each phase.",
+    "visual_only_facts": [
+      "The Build phase is the longest workstream at 9 weeks",
+      "GA Launch begins in week 20 of the roadmap, which starts 2025-01-06"
+    ],
+    "image_paths": [
+      "images/_chart_roadmap.png"
+    ]
+  },
+  {
+    "doc_id": "doc11",
+    "kind": "pdf",
+    "path": "pdfs/doc11_remote_work_policy.pdf",
+    "extractable_text": "Employees may work remotely up to 3 days per week with manager approval. Core collaboration hours are 10am-3pm in your local time zone. Equipment stipends of $500/year are available for home office setup. International remote work requires a separate compliance review before approval.",
+    "visual_only_facts": [],
+    "image_paths": []
+  },
+  {
+    "doc_id": "doc12",
+    "kind": "pdf",
+    "path": "pdfs/doc12_data_retention_policy.pdf",
+    "extractable_text": "Customer transaction records are retained for 7 years to satisfy regulatory requirements. Application logs are retained for 90 days. Backups are encrypted at rest and rotated monthly. Deletion requests under privacy regulations must be fulfilled within 30 days.",
+    "visual_only_facts": [],
+    "image_paths": []
+  }
+]

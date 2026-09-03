@@ -1,0 +1,205 @@
+{
+  "top_k": 5,
+  "per_query": [
+    {
+      "query_id": "q01",
+      "query": "What was the highest-revenue region in Q3?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc01",
+      "multimodal_top_doc": "doc01",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.63,
+      "multimodal_latency_ms": 0.55
+    },
+    {
+      "query_id": "q02",
+      "query": "Which production service connects directly to the redis cache?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc03",
+      "multimodal_top_doc": "doc03",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.39,
+      "multimodal_latency_ms": 0.41
+    },
+    {
+      "query_id": "q03",
+      "query": "How long did the payment latency spike last during the incident?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc06",
+      "multimodal_top_doc": "doc06",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.34,
+      "multimodal_latency_ms": 0.4
+    },
+    {
+      "query_id": "q04",
+      "query": "Which expense category had the largest budget overage in Q3?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc07",
+      "multimodal_top_doc": "doc07",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.36,
+      "multimodal_latency_ms": 0.36
+    },
+    {
+      "query_id": "q05",
+      "query": "Which rack is physically isolated near the cooling unit in the server room?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 0.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": null,
+      "multimodal_top_doc": "doc05",
+      "winner": "multimodal",
+      "text_rag_latency_ms": 0.33,
+      "multimodal_latency_ms": 0.38
+    },
+    {
+      "query_id": "q06",
+      "query": "Who does Divya Krishnan report to?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 0.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc04",
+      "multimodal_top_doc": "doc08",
+      "winner": "multimodal",
+      "text_rag_latency_ms": 0.34,
+      "multimodal_latency_ms": 0.36
+    },
+    {
+      "query_id": "q07",
+      "query": "How long does the Build phase take in the 2025 product roadmap?",
+      "query_type": "visual_favoring",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc10",
+      "multimodal_top_doc": "doc10",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.33,
+      "multimodal_latency_ms": 0.38
+    },
+    {
+      "query_id": "q08",
+      "query": "What should new engineers do in their first week?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc02",
+      "multimodal_top_doc": "doc02",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.36,
+      "multimodal_latency_ms": 0.33
+    },
+    {
+      "query_id": "q09",
+      "query": "When does health insurance coverage start for a new employee?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc04",
+      "multimodal_top_doc": "doc04",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.38,
+      "multimodal_latency_ms": 0.35
+    },
+    {
+      "query_id": "q10",
+      "query": "What multi-factor authentication and encryption requirements exist for laptops?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc09",
+      "multimodal_top_doc": "doc09",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.33,
+      "multimodal_latency_ms": 0.33
+    },
+    {
+      "query_id": "q11",
+      "query": "How many days per week can employees work remotely?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc11",
+      "multimodal_top_doc": "doc11",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.36,
+      "multimodal_latency_ms": 0.35
+    },
+    {
+      "query_id": "q12",
+      "query": "How long are application logs retained?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc12",
+      "multimodal_top_doc": "doc12",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.43,
+      "multimodal_latency_ms": 0.34
+    },
+    {
+      "query_id": "q13",
+      "query": "What caused the payments outage and how was it mitigated?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc06",
+      "multimodal_top_doc": "doc06",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.34,
+      "multimodal_latency_ms": 0.37
+    },
+    {
+      "query_id": "q14",
+      "query": "What is the 401k matching policy?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc04",
+      "multimodal_top_doc": "doc04",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.32,
+      "multimodal_latency_ms": 0.37
+    },
+    {
+      "query_id": "q15",
+      "query": "What deletion timeline applies to privacy/data-subject requests?",
+      "query_type": "text_only",
+      "text_rag_mrr": 1.0,
+      "multimodal_mrr": 1.0,
+      "text_rag_top_doc": "doc12",
+      "multimodal_top_doc": "doc12",
+      "winner": "tie",
+      "text_rag_latency_ms": 0.49,
+      "multimodal_latency_ms": 0.42
+    }
+  ],
+  "summary": {
+    "text_rag": {
+      "precision@5": 0.441,
+      "recall@5": 0.867,
+      "hit_rate@5": 0.867,
+      "mrr": 0.867,
+      "avg_latency_ms": 0.38
+    },
+    "multimodal": {
+      "precision@5": 0.532,
+      "recall@5": 1.0,
+      "hit_rate@5": 1.0,
+      "mrr": 1.0,
+      "avg_latency_ms": 0.38
+    }
+  },
+  "visual_favoring_only": {
+    "text_rag_mrr": 0.714,
+    "multimodal_mrr": 1.0
+  }
+}
