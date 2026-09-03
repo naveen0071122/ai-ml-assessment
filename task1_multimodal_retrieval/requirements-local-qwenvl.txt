@@ -1,0 +1,15 @@
+# Optional, ONLY needed if you want to run Qwen-VL locally instead of the
+# hosted API (QWEN_VL_BACKEND=local). Not required for the default mock
+# or hosted-API modes -- see requirements.txt for those.
+#
+# Install with:
+#   pip install -r requirements-local-qwenvl.txt
+#
+# First run of the app after this will download model weights from
+# Hugging Face Hub (a few GB for the default 2B model) -- needs network
+# access once, then everything runs fully offline.
+torch>=2.2.0
+torchvision>=0.17.0
+transformers>=4.45.0
+accelerate>=0.30.0
+qwen-vl-utils>=0.0.8

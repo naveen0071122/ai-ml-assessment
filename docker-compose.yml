@@ -1,0 +1,41 @@
+# Enterprise-oriented local orchestration: both tasks as independently
+# buildable/runnable services, sharing the same compose file so a
+# reviewer can bring up the whole submission with one command.
+#
+# Run everything:
+#   docker compose up --build
+# Run only the Task 1 web app:
+#   docker compose up --build task1-web
+# Run the Task 2 demo once and exit:
+#   docker compose run --rm task2-agent
+#
+# Secrets (DASHSCOPE_API_KEY, ANTHROPIC_API_KEY) are read from a local
+# .env file via env_file below -- NEVER baked into the images or committed
+# to the repo. Copy .env.example to .env and fill in only what you have;
+# both services run fully functional offline-fallback modes with no keys
+# at all.
+
+services:
+  task1-web:
+    build:
+      context: ./task1_multimodal_retrieval
+    ports:
+      - "8501:8501"
+    environment:
+      - PORT=8501
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  task2-agent:
+    build:
+      context: ./task2_mcp_agent
+    env_file:
+      - .env
+    # This service is a one-shot CLI demo, not a long-running web
+    # server -- `docker compose up` will run it once and exit; use
+    # `docker compose run --rm task2-agent` to invoke it on demand
+    # instead of leaving it in the default `up` set for the enterprise
+    # local-dev flow (a web app and a batch job have different
+    # lifecycle expectations, and conflating them in one `up` invocation
+    # is exactly the kind of thing a production compose file avoids).

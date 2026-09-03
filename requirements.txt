@@ -1,0 +1,4 @@
+# Convenience file: installs dependencies for BOTH tasks.
+# Each task also has its own requirements.txt if you only want one.
+-r task1_multimodal_retrieval/requirements.txt
+-r task2_mcp_agent/requirements.txt
