@@ -133,6 +133,7 @@ def run_query(sql: str) -> dict:
     agent) can inspect it and retry with a corrected query — the agent
     does not get a raw traceback/crash.
     """
+    sql = sql.strip().rstrip(";")
     try:
         _enforce_read_only(sql)
     except ValueError as e:
@@ -172,4 +173,4 @@ if __name__ == "__main__":
     if "--selftest" in sys.argv:
         _selftest()
     else:
-        mcp.run()  # defaults to stdio transport, as launched by agent.py
+        mcp.run()

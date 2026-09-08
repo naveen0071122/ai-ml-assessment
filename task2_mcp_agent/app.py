@@ -8,9 +8,7 @@ Run locally:
     streamlit run app.py
 
 The underlying MCPAgent (agent.py) is unchanged -- this is a thin UI
-layer over it. Same three backends, same auto-detection: LLM_BACKEND env
-var, else ANTHROPIC_API_KEY present -> Claude, else a local Ollama server
-reachable -> Ollama, else the offline rule-based planner (no keys/cost).
+layer over it. Backends supported: NVIDIA Nemotron, Claude, Ollama, Offline.
 """
 import asyncio
 import os
@@ -19,6 +17,11 @@ import sys
 import streamlit as st
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Streamlit Cloud-la irundhu st.secrets-a os.environ-ku sync panradhu
+for key in ["NVIDIA_API_KEY", "LLM_BACKEND", "NVIDIA_MODEL", "ANTHROPIC_API_KEY"]:
+    if key in st.secrets:
+        os.environ[key] = st.secrets[key]
 
 from agent import MCPAgent, _resolve_backend  # noqa: E402
 import database  # noqa: E402
@@ -42,17 +45,18 @@ st.caption(
 )
 
 backend = _resolve_backend()
-if backend == "claude":
+if backend == "nvidia":
+    st.success("Running with **NVIDIA Nemotron** (`NVIDIA_API_KEY` set) — the real plan → act → observe loop.", icon="🤖")
+elif backend == "claude":
     st.success("Running with **Claude** (`ANTHROPIC_API_KEY` set) — the real plan → act → observe loop.", icon="🤖")
 elif backend == "ollama":
     st.success("Running with a **local Ollama model** — the real plan → act → observe loop.", icon="🖥️")
 else:
     st.info(
-        "Running with the **offline rule-based planner** (no `ANTHROPIC_API_KEY` set, "
+        "Running with the **offline rule-based planner** (no API key set, "
         "no local Ollama server reachable). It reproduces the exact MCP call sequence "
         "for the questions below without any LLM -- good for verifying the connector "
-        "and guardrails, not a general-purpose planner. See README for how to enable "
-        "Claude or Ollama instead.",
+        "and guardrails, not a general-purpose planner.",
         icon="ℹ️",
     )
 
@@ -71,19 +75,17 @@ if question == "Custom question...":
         "Type your own question",
         placeholder="e.g. Which projects does Karthik Iyer lead?",
     )
-    if backend != "claude" and backend != "ollama":
+    if backend not in ("claude", "ollama", "nvidia"):
         st.warning(
             "The offline planner only recognizes the three demo questions above "
-            "verbatim. A custom question needs Claude or Ollama configured.",
+            "verbatim. A custom question needs NVIDIA, Claude, or Ollama configured.",
             icon="⚠️",
         )
 
 run = st.button("Ask the agent", type="primary")
 
 if run and question:
-    log_placeholder = st.empty()  # a single slot that gets overwritten in
-                                    # place, instead of st.container() which
-                                    # stacks a new code block on every call
+    log_placeholder = st.empty()  # single slot overwritten in place
     log_lines = []
 
     class _StreamToStreamlit:
@@ -113,6 +115,5 @@ if run and question:
 st.divider()
 st.caption(
     "See README.md for the full write-up: MCP connector flow, defense-in-depth "
-    "read-only guardrails, and the required demos (JOIN query, error recovery, "
-    "clarifying question) -- or run `python demo.py` for all four in one go."
+    "read-only guardrails, and the required demos -- or run `python demo.py` for all four in one go."
 )
