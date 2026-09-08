@@ -5,38 +5,25 @@ by talking to mcp_server.py over the real MCP stdio transport (a separate
 subprocess) -- it never imports mcp_server.py directly or opens the DB
 itself, so the only way it can touch data is through the three MCP tools.
 
-Three modes, chosen automatically via LLM_BACKEND (or auto-detected):
+Four modes, chosen automatically via LLM_BACKEND (or auto-detected):
 
-1. "claude" (used when ANTHROPIC_API_KEY is set): Claude drives a real
-   plan -> act -> observe loop, calling list_tables / describe_schema /
-   run_query as tools, reading tool results, and deciding the next call
-   (including retrying after a SQL error, and asking a clarifying
-   question when the question is ambiguous).
+1. "nvidia" (used when NVIDIA_API_KEY is set or LLM_BACKEND=nvidia):
+    Uses NVIDIA Build API with models like `nvidia/nemotron-3.5-lightning-30b-a3b` via 
+    OpenAI-compatible endpoint (https://integrate.api.nvidia.com/v1).
 
-2. "ollama" (LLM_BACKEND=ollama, or auto-detected if a local Ollama
-   server is running): a genuinely free, local, no-API-key alternative.
-   Uses a tool-calling-capable open model (default `qwen2.5:7b`) served
-   by Ollama on your own machine. Same plan -> act -> observe loop and
-   tool schema as the Claude path -- Ollama's chat API accepts
-   OpenAI-style tool definitions, so list_tools_for_llm()'s output is
-   reused for both, just wrapped slightly differently.
-   Setup (one-time, free, no signup):
-       # install Ollama from https://ollama.com
-       ollama pull qwen2.5:7b
-       ollama serve            # usually auto-starts after install
-       export LLM_BACKEND=ollama
-       python agent.py "..."
+2. "claude" (used when ANTHROPIC_API_KEY is set): Claude drives a real
+    plan -> act -> observe loop, calling list_tables / describe_schema /
+    run_query as tools.
 
-3. "offline" (no key, no Ollama server reachable): a small rule-based
-   planner reproduces the same MCP call sequence for the three demo
-   questions in demo.py, so the connector + guardrails can be graded
-   end-to-end without any LLM at all. Clearly logged as "OFFLINE MODE"
-   -- a grading convenience, not the intended production path.
+3. "ollama" (LLM_BACKEND=ollama, or auto-detected if a local Ollama
+    server is running): a free, local alternative using Ollama models.
+
+4. "offline" (no key, no Ollama server reachable): a rule-based planner.
 
 Usage:
     python agent.py "Fetch employee details where department = 'AI'"
     python agent.py "Which AI-team members have open issues on Project X?"
-    python agent.py "Show me the issues for the AI team"   # ambiguous -> clarifies
+    python agent.py "Show me the issues for the AI team"
 """
 import asyncio
 import json
@@ -44,23 +31,30 @@ import os
 import sys
 from contextlib import AsyncExitStack
 
+from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+# Load environment variables from .env file
+load_dotenv()
+
 SERVER_SCRIPT = os.path.join(os.path.dirname(__file__), "mcp_server.py")
-MAX_TURNS = 6  # hard cap on plan->act->observe iterations, avoids infinite loops
+MAX_TURNS = 8  # Hard cap on plan->act->observe iterations
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
+NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
 
 
 def _resolve_backend() -> str:
     override = os.environ.get("LLM_BACKEND", "").strip().lower()
-    if override in ("claude", "ollama", "offline"):
+    if override in ("nvidia", "claude", "ollama", "offline"):
         return override
+    if os.environ.get("NVIDIA_API_KEY"):
+        return "nvidia"
     if os.environ.get("ANTHROPIC_API_KEY"):
         return "claude"
     try:
         import ollama
-        ollama.Client().list()  # cheap ping; raises if no server reachable
+        ollama.Client().list()  # cheap ping
         return "ollama"
     except Exception:
         return "offline"
@@ -86,8 +80,8 @@ class MCPAgent:
         await self._stack.aclose()
 
     async def list_tools_for_llm(self):
+        """Convert MCP tool schema -> Claude tool schema."""
         resp = await self.session.list_tools()
-        # Convert MCP tool schema -> Claude tool schema.
         return [
             {
                 "name": t.name,
@@ -97,10 +91,8 @@ class MCPAgent:
             for t in resp.tools
         ]
 
-    async def list_tools_for_ollama(self):
-        """Ollama's chat API expects OpenAI-style {"type": "function", ...}
-        tool definitions rather than Claude's flatter schema -- same
-        underlying MCP tool list, different wrapping."""
+    async def list_tools_for_openai(self):
+        """OpenAI/NVIDIA & Ollama chat API expects OpenAI-style {"type": "function", ...}"""
         resp = await self.session.list_tools()
         return [
             {
@@ -115,6 +107,10 @@ class MCPAgent:
         ]
 
     async def call_tool(self, name: str, args: dict):
+        # Auto-strip trailing semicolons from SQL queries to prevent SQLite execution errors with appended LIMITs
+        if name == "run_query" and isinstance(args, dict) and "sql" in args and isinstance(args["sql"], str):
+            args["sql"] = args["sql"].rstrip().rstrip(";")
+
         result = await self.session.call_tool(name, args)
         blocks = [b.text for b in result.content if getattr(b, "type", "") == "text"]
         if len(blocks) == 1:
@@ -122,8 +118,63 @@ class MCPAgent:
                 return json.loads(blocks[0])
             except json.JSONDecodeError:
                 return blocks[0]
-        # list_tables returns one text block per table name (a list result).
         return blocks
+
+    # ------------------------------------------------------------------
+    # LLM-driven plan -> act -> observe loop (NVIDIA NIM)
+    # ------------------------------------------------------------------
+    async def ask_nvidia(self, question: str) -> str:
+        from openai import OpenAI
+
+        api_key = os.environ.get("NVIDIA_API_KEY")
+        if not api_key:
+            return "Error: NVIDIA_API_KEY is not set in environment or .env file."
+
+        client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key,
+        )
+
+        tools = await self.list_tools_for_openai()
+        messages = [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": question},
+        ]
+
+        for turn in range(MAX_TURNS):
+            response = client.chat.completions.create(
+                model=NVIDIA_MODEL,
+                messages=messages,
+                tools=tools,
+                tool_choice="auto",
+                temperature=0.2,
+            )
+
+            choice = response.choices[0]
+            msg = choice.message
+
+            # Append the assistant message directly to history
+            messages.append(msg)
+
+            if not msg.tool_calls:
+                return msg.content or "(no answer produced)"
+
+            for call in msg.tool_calls:
+                name = call.function.name
+                raw_args = call.function.arguments
+                args = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
+
+                print(f"  [agent] -> {name}({args})")
+                observation = await self.call_tool(name, args)
+                print(f"  [agent] <- {json.dumps(observation)[:200]}")
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": call.id,
+                    "content": json.dumps(observation),
+                })
+
+        return "Reached the turn limit without a final answer -- see transcript above."
 
     # ------------------------------------------------------------------
     # LLM-driven plan -> act -> observe loop (Claude backend)
@@ -131,12 +182,6 @@ class MCPAgent:
     async def ask_llm(self, question: str) -> str:
         import anthropic
 
-        # Some Anthropic API keys are "identity-linked" (tied to a personal
-        # Console login rather than a workspace) and require an explicit
-        # anthropic-workspace-id header, or the API returns a 400 error
-        # ("anthropic-workspace-id is required..."). Confirmed happening
-        # with a real user's key. If ANTHROPIC_WORKSPACE_ID is set, pass it
-        # through; otherwise behave exactly as before.
         extra_headers = {}
         workspace_id = os.environ.get("ANTHROPIC_WORKSPACE_ID")
         if workspace_id:
@@ -158,7 +203,6 @@ class MCPAgent:
 
             tool_calls = [b for b in resp.content if b.type == "tool_use"]
             if not tool_calls:
-                # Final natural-language answer (or a clarifying question).
                 return "".join(b.text for b in resp.content if b.type == "text")
 
             tool_results = []
@@ -184,7 +228,7 @@ class MCPAgent:
         import ollama
 
         client = ollama.Client()
-        tools = await self.list_tools_for_ollama()
+        tools = await self.list_tools_for_openai()
         messages = [
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": question},
@@ -212,8 +256,7 @@ class MCPAgent:
         return "Reached the turn limit without a final answer -- see transcript above."
 
     # ------------------------------------------------------------------
-    # Offline deterministic fallback (no LLM at all) -- same MCP calls, a
-    # hand-written planner instead of an LLM choosing them.
+    # Offline deterministic fallback (no LLM at all)
     # ------------------------------------------------------------------
     async def ask_offline(self, question: str) -> str:
         q = question.lower()
@@ -239,7 +282,6 @@ class MCPAgent:
                 s = await self.call_tool("describe_schema", {"table_name": t})
                 print(f"  [agent] describe_schema({t}) -> {[c['name'] for c in s['columns']]}")
 
-            # Deliberately typo a column first time to demonstrate error recovery.
             bad_sql = (
                 "SELECT e.name, i.title, i.status FROM issues i "
                 "JOIN employes e ON i.assignee_id = e.id "
@@ -251,9 +293,6 @@ class MCPAgent:
 
             if "error" in bad:
                 print("  [agent] error detected -> correcting typo 'employes' -> 'employees' and retrying")
-                # "Project X" in the question doesn't exist verbatim in the seed
-                # data (real project is "Project X - Doc Intelligence"), so this
-                # also demonstrates the fuzzy-match / clarification path.
                 fixed_sql = (
                     "SELECT e.name, i.title, i.status, i.priority FROM issues i "
                     "JOIN employees e ON i.assignee_id = e.id "
@@ -276,9 +315,6 @@ class MCPAgent:
                 return f"AI-team members with open issues on Project X:\n{lines}"
 
         if "issues" in q and "ai team" in q:
-            # Deliberately ambiguous: which AI project? Demonstrates the
-            # agent recognising ambiguity via the data itself (not a
-            # canned string match) and asking instead of guessing.
             projects = await self.call_tool(
                 "run_query", {"sql": "SELECT name, status FROM projects WHERE department='AI'"}
             )
@@ -296,12 +332,13 @@ class MCPAgent:
 
         return (
             "Offline mode only knows the three demo questions from the assessment "
-            "brief. Set ANTHROPIC_API_KEY (Claude) or run a local Ollama server "
-            "with LLM_BACKEND=ollama to enable the general-purpose LLM planner."
+            "brief. Set NVIDIA_API_KEY, ANTHROPIC_API_KEY, or run a local Ollama server."
         )
 
     async def ask(self, question: str) -> str:
         backend = _resolve_backend()
+        if backend == "nvidia":
+            return await self.ask_nvidia(question)
         if backend == "claude":
             return await self.ask_llm(question)
         if backend == "ollama":
@@ -314,12 +351,13 @@ _SYSTEM_PROMPT = (
     "database using ONLY the provided tools (list_tables, describe_schema, "
     "run_query). You do not know the schema in advance -- always call "
     "list_tables and describe_schema for the relevant tables before writing "
-    "SQL. If a run_query call returns an 'error' field, read the error and "
-    "retry with a corrected query instead of giving up. If the question is "
-    "genuinely ambiguous (e.g. it references a project by a name that could "
-    "match more than one row, or a filter that isn't in the schema), ask ONE "
-    "short clarifying question instead of guessing. Once you have enough "
-    "data, answer in plain English, grounded only in what the tools returned."
+    "SQL. Do NOT include a trailing semicolon ';' in your SQL queries. If a run_query "
+    "call returns an 'error' field, read the error and retry with a corrected "
+    "query instead of giving up. If the question is genuinely ambiguous (e.g. "
+    "it references a project by a name that could match more than one row, or a "
+    "filter that isn't in the schema), ask ONE short clarifying question instead of "
+    "guessing. Once you have enough data, answer in plain English, grounded only "
+    "in what the tools returned."
 )
 
 
@@ -336,4 +374,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
